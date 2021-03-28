@@ -1,4 +1,5 @@
 require("dotenv").config();
+const cool = require('cool-ascii-faces');
 const express = require("express");
 const cors = require("cors");
 const lyricsFinder = require("lyrics-finder");
@@ -6,6 +7,8 @@ const SpotifyWebApi = require("spotify-web-api-node");
 const bodyParser = require("body-parser");
 const helmet = require('helmet');
 const compression = require('compression');
+
+const PORT = process.env.PORT || 5000;
 
 const app = express();
 app.use(cors());
@@ -19,6 +22,8 @@ const defaults = {
   clientId: process.env.CLIENT_ID,
   clientSecret: process.env.CLIENT_SECRET,
 };
+app.get('/cool', (req, res) => res.send(cool()));
+app.get('/', (req, res) => res.render('pages/index'))
 
 app.post("/refresh", (req, res) => {
   const refreshToken = req.body.refreshToken;
@@ -66,4 +71,4 @@ app.get("/lyrics", async (req, res) => {
   res.json({ lyrics });
 });
 
-app.listen(process.env.PORT || 5000)
+app.listen(PORT, () => console.log(`Listening on ${ PORT }`));
