@@ -54,6 +54,7 @@ app.post("/refresh", (req, res) => {
 
 app.post("/login", (req, res) => {
   const code = req.body.code;
+  console.log(code);
   const spotifyApi = new SpotifyWebApi({
     ...spotifyDefaults(req.get("host").includes("localhost")),
   });
@@ -67,65 +68,69 @@ app.post("/login", (req, res) => {
       });
     })
     .catch((err) => {
+      console.log(err);
       res.status(400).json({ status: err.status });
     });
 });
 
 app.post("/GetLyric", async (req, res) => {
-  const { artist, track } = req.body;
-  db.query("SELECT lyrics FROM song WHERE artist = $1 AND track = $2 ", [
-    artist,
-    track
-  ])
+  const { artist, track, track_uri, track_image_url } = req.body;
+  db.query("SELECT lyrics FROM song WHERE track_uri = $1 ", [track_uri])
     .then((selectData) => {
       if (selectData.rows[0] && selectData.rows[0].lyrics)
         res.status(200).json({
           lyrics: selectData.rows[0].lyrics,
-          status: "Success - Kayıtlı"
+          status: "Success - Kayıtlı",
         });
       else
         lyricsFinder(artist, track)
           .then((lyrics) => {
             if (!lyrics)
               return res.status(200).json({
-                lyrics: "Şarkı sözleri bulunamadı. Daha sonra tekrar deneyiniz.",
-                status: "Fail - Sözler yok bir daha bulmayı deneyecek. Bulursa kaydedicek"
+                lyrics:
+                  "Şarkı sözleri bulunamadı. Daha sonra tekrar deneyiniz.",
+                status:
+                  "Fail - Sözler yok bir daha bulmayı deneyecek. Bulursa kaydedicek",
               });
 
             if (selectData.rows[0]) {
-              db.query(
-                `UPDATE song SET artist = $1 track= $2 lyrics = $3 WHERE artist = $1 AND track = $2`,
-                [artist, track, lyrics]
-              )
+              db.query(`UPDATE song SET lyrics = $1 WHERE track_uri = $2 `, [
+                lyrics,
+                track_uri,
+              ])
                 .then((data) => {
                   res.status(200).json({
                     lyrics: lyrics,
-                    status: "Success - Kayıtlı (Update Etti)"
+                    status: "Success - Kayıtlı (Update Etti)",
                   });
                 })
                 .catch((err) => {
                   console.log(err);
                   res.status(200).json({
-                    lyrics: "Şarkı sözleri bulunamadı. Daha sonra tekrar deneyiniz.",
-                    status: "Fail - Update patladı"
+                    lyrics:
+                      "Şarkı sözleri bulunamadı. Daha sonra tekrar deneyiniz.",
+                    status: "Fail - Update patladı",
                   });
                 });
             } else {
               db.query(
-                `INSERT INTO song (artist,track,lyrics) VALUES($1,$2,$3)`,
-                [artist, track, lyrics]
-              ).then(() => {
-                res.status(200).json({
-                  lyrics,
-                  status: "Success - Kayıtlı (Insert Etti)"
+                `INSERT INTO song (artist,track,lyrics,track_uri,track_image_url) VALUES($1,$2,$3,$4,$5)`,
+                [artist, track, lyrics,track_uri, track_image_url]
+              )
+                .then(() => {
+                  res.status(200).json({
+                    lyrics,
+                    status: "Success - Kayıtlı (Insert Etti)",
+                  });
+                })
+                .catch((err) => {
+                  console.log(err);
+                  res.status(200).json({
+                    lyrics:
+                      "Şarkı sözleri bulunamadı. Daha sonra tekrar deneyiniz.",
+                    status: "Fail - Insert patladı",
+                  });
                 });
-              }).catch((err) => {
-                console.log(err);
-                res.status(200).json({
-                  lyrics: "Şarkı sözleri bulunamadı. Daha sonra tekrar deneyiniz.",
-                  status: "Fail - Insert patladı"
-                });
-              });;
             }
           })
           .catch((err) => {
