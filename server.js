@@ -20,19 +20,23 @@ app.use((req, res, next) => {
   //burada her hangi bir işlem yapabiliriz
   next();
 });
-//Middleware END
 
-const spotifyDefaults = {
-  redirectUri: process.env.REDIRECT_URI,
-  clientId: process.env.CLIENT_ID,
-  clientSecret: process.env.CLIENT_SECRET,
+//Middleware END
+const spotifyDefaults = (isLocal) => {
+  return {
+    redirectUri: isLocal
+      ? process.env.REDIRECT_URI_LOCALE
+      : process.env.REDIRECT_URI,
+    clientId: process.env.CLIENT_ID,
+    clientSecret: process.env.CLIENT_SECRET,
+  };
 };
 
 app.post("/refresh", (req, res) => {
   const refreshToken = req.body.refreshToken;
   const spotifyApi = new SpotifyWebApi({
     refreshToken,
-    ...spotifyDefaults,
+    ...spotifyDefaults(req.get("host").includes("localhost")),
   });
 
   spotifyApi
@@ -50,9 +54,8 @@ app.post("/refresh", (req, res) => {
 
 app.post("/login", (req, res) => {
   const code = req.body.code;
-  console.log(req.body);
   const spotifyApi = new SpotifyWebApi({
-    ...spotifyDefaults,
+    ...spotifyDefaults(req.get("host").includes("localhost")),
   });
   spotifyApi
     .authorizationCodeGrant(code)
@@ -122,7 +125,6 @@ app.post("/GetAllSong", (req, res) => {
       res.status(400).json({ status: err });
     });
 });
-
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Listening on ${PORT}`));
