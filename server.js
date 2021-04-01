@@ -73,42 +73,76 @@ app.post("/login", (req, res) => {
 
 app.post("/GetLyric", async (req, res) => {
   const { artist, track } = req.body;
-  db.query(
-    `SELECT lyrics FROM song WHERE artist = '${artist}' AND track = '${track}' `
-  )
-    .then((data) => {
-      if (data.rows[0])
+  db.query("SELECT lyrics FROM song WHERE artist = $1 AND track = $2 ", [
+    artist,
+    track
+  ])
+    .then((selectData) => {
+      if (selectData.rows[0] && selectData.rows[0].lyrics)
         res.status(200).json({
-          lyrics: data.rows[0].lyrics,
-          status: "Success",
-          totalCount: data.rows.length,
+          lyrics: selectData.rows[0].lyrics,
+          status: "Success - Kayıtlı"
         });
-      else {
+      else
         lyricsFinder(artist, track)
           .then((lyrics) => {
-            db.query(
-              `INSERT INTO song (artist,track,lyrics) VALUES($1,$2,$3)`,
-              [artist, track, lyrics]
-            ).then((data) => {
-              res.status(200).json({
-                lyrics,
-                status: "Success",
-                totalCount: data.rows.length,
+            if (!lyrics)
+              return res.status(200).json({
+                lyrics: "Şarkı sözleri bulunamadı. Daha sonra tekrar deneyiniz.",
+                status: "Fail - Sözler yok bir daha bulmayı deneyecek. Bulursa kaydedicek"
               });
-            });
+
+            if (selectData.rows[0]) {
+              db.query(
+                `UPDATE song SET artist = $1 track= $2 lyrics = $3 WHERE artist = $1 AND track = $2`,
+                [artist, track, lyrics]
+              )
+                .then((data) => {
+                  res.status(200).json({
+                    lyrics: lyrics,
+                    status: "Success - Kayıtlı (Update Etti)"
+                  });
+                })
+                .catch((err) => {
+                  console.log(err);
+                  res.status(200).json({
+                    lyrics: "Şarkı sözleri bulunamadı. Daha sonra tekrar deneyiniz.",
+                    status: "Fail - Update patladı"
+                  });
+                });
+            } else {
+              db.query(
+                `INSERT INTO song (artist,track,lyrics) VALUES($1,$2,$3)`,
+                [artist, track, lyrics]
+              ).then(() => {
+                res.status(200).json({
+                  lyrics,
+                  status: "Success - Kayıtlı (Insert Etti)"
+                });
+              }).catch((err) => {
+                console.log(err);
+                res.status(200).json({
+                  lyrics: "Şarkı sözleri bulunamadı. Daha sonra tekrar deneyiniz.",
+                  status: "Fail - Insert patladı"
+                });
+              });;
+            }
           })
           .catch((err) => {
+            console.log(err);
             res.status(200).json({
-              lyrics: "Şarkı sözleri bulunamadı",
-              status: "Fail",
+              lyrics: "Şarkı sözleri bulunamadı. Daha sonra tekrar deneyiniz.",
+              status: "Fail - LyricsFinder patladı",
               message: err.message,
             });
           });
-      }
     })
     .catch((err) => {
-      console.log(err.message);
-      res.status(400).json({ status: err });
+      res.status(200).json({
+        lyrics: "Şarkı sözleri bulunamadı. Daha sonra tekrar deneyiniz.",
+        status: "Fail - servis patladı",
+        message: err.message,
+      });
     });
 });
 
