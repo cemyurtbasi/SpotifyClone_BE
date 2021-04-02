@@ -54,7 +54,6 @@ app.post("/refresh", (req, res) => {
 
 app.post("/login", (req, res) => {
   const code = req.body.code;
-  console.log(code);
   const spotifyApi = new SpotifyWebApi({
     ...spotifyDefaults(req.get("host").includes("localhost")),
   });
@@ -152,7 +151,7 @@ app.post("/GetLyric", async (req, res) => {
 });
 
 app.post("/GetAllSong", (req, res) => {
-  db.query("SELECT * FROM Song")
+  db.query("SELECT * FROM Song ORDER BY ID desc")
     .then((data) => {
       res.status(200).json({
         data: data.rows,
