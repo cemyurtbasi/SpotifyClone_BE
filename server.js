@@ -73,7 +73,7 @@ app.post("/login", (req, res) => {
 });
 
 app.post("/GetLyric", async (req, res) => {
-  const { artist, track, track_uri, track_image_url } = req.body;
+  const { artist, track_name, track_uri, track_image_url } = req.body;
   db.query("SELECT lyrics FROM song WHERE track_uri = $1 ", [track_uri])
     .then((selectData) => {
       if (selectData.rows[0] && selectData.rows[0].lyrics)
@@ -82,7 +82,7 @@ app.post("/GetLyric", async (req, res) => {
           status: "Success - Kayıtlı",
         });
       else
-        lyricsFinder(artist, track)
+        lyricsFinder(artist, track_name)
           .then((lyrics) => {
             if (!lyrics)
               return res.status(200).json({
@@ -114,7 +114,7 @@ app.post("/GetLyric", async (req, res) => {
             } else {
               db.query(
                 `INSERT INTO song (artist,track,lyrics,track_uri,track_image_url) VALUES($1,$2,$3,$4,$5)`,
-                [artist, track, lyrics,track_uri, track_image_url]
+                [artist, track_name, lyrics,track_uri, track_image_url]
               )
                 .then(() => {
                   res.status(200).json({
