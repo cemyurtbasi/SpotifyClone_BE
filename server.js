@@ -35,7 +35,7 @@ const spotifyDefaults = () => {
 
 app.post("/api/v1/refresh", (req, res) => {
   const refreshToken = req.body.refreshToken;
-  console.log(...spotifyDefaults());
+  console.log({...spotifyDefaults()});
   const spotifyApi = new SpotifyWebApi({
     refreshToken,
     ...spotifyDefaults(),
@@ -57,7 +57,7 @@ app.post("/api/v1/refresh", (req, res) => {
 
 app.post("/api/v1/login", (req, res) => {
   const code = req.body.code;
-  console.log(...spotifyDefaults());
+  console.log({...spotifyDefaults()});
   const spotifyApi = new SpotifyWebApi({
     ...spotifyDefaults(),
   });
