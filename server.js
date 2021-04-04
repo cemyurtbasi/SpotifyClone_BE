@@ -35,6 +35,7 @@ const spotifyDefaults = () => {
 
 app.post("/api/v1/refresh", (req, res) => {
   const refreshToken = req.body.refreshToken;
+  console.log(...spotifyDefaults());
   const spotifyApi = new SpotifyWebApi({
     refreshToken,
     ...spotifyDefaults(),
@@ -49,12 +50,14 @@ app.post("/api/v1/refresh", (req, res) => {
       });
     })
     .catch((err) => {
+      console.log(err);
       res.status(400).json({ status: err.status });
     });
 });
 
 app.post("/api/v1/login", (req, res) => {
   const code = req.body.code;
+  console.log(...spotifyDefaults());
   const spotifyApi = new SpotifyWebApi({
     ...spotifyDefaults(),
   });
@@ -161,6 +164,7 @@ app.post("/api/v1/GetAllSong", (req, res) => {
       });
     })
     .catch((err) => {
+      console.log(err);
       res.status(400).json({ status: err });
     });
 });
