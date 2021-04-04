@@ -22,21 +22,22 @@ app.use((req, res, next) => {
 });
 
 //Middleware END
-const spotifyDefaults = (isLocal) => {
+const spotifyDefaults = () => {
   return {
-    redirectUri: isLocal
-      ? process.env.REDIRECT_URI_LOCALE
-      : process.env.REDIRECT_URI,
+    redirectUri:
+      process.env.NODE_ENV === "production"
+        ? "/play/"
+        : "http://localhost:3000/play/",
     clientId: process.env.CLIENT_ID,
     clientSecret: process.env.CLIENT_SECRET,
   };
 };
 
-app.post("/refresh", (req, res) => {
+app.post("/api/v1/refresh", (req, res) => {
   const refreshToken = req.body.refreshToken;
   const spotifyApi = new SpotifyWebApi({
     refreshToken,
-    ...spotifyDefaults(req.get("host").includes("localhost")),
+    ...spotifyDefaults(),
   });
 
   spotifyApi
@@ -52,10 +53,10 @@ app.post("/refresh", (req, res) => {
     });
 });
 
-app.post("/login", (req, res) => {
+app.post("/api/v1/login", (req, res) => {
   const code = req.body.code;
   const spotifyApi = new SpotifyWebApi({
-    ...spotifyDefaults(req.get("host").includes("localhost")),
+    ...spotifyDefaults(),
   });
   spotifyApi
     .authorizationCodeGrant(code)
@@ -72,7 +73,7 @@ app.post("/login", (req, res) => {
     });
 });
 
-app.post("/GetLyric", async (req, res) => {
+app.post("/api/v1/GetLyric", async (req, res) => {
   const { artist, track_name, track_uri, track_image_url } = req.body;
   db.query("SELECT lyrics FROM song WHERE track_uri = $1 ", [track_uri])
     .then((selectData) => {
@@ -114,7 +115,7 @@ app.post("/GetLyric", async (req, res) => {
             } else {
               db.query(
                 `INSERT INTO song (artist,track,lyrics,track_uri,track_image_url) VALUES($1,$2,$3,$4,$5)`,
-                [artist, track_name, lyrics,track_uri, track_image_url]
+                [artist, track_name, lyrics, track_uri, track_image_url]
               )
                 .then(() => {
                   res.status(200).json({
@@ -150,7 +151,7 @@ app.post("/GetLyric", async (req, res) => {
     });
 });
 
-app.post("/GetAllSong", (req, res) => {
+app.post("/api/v1/GetAllSong", (req, res) => {
   db.query("SELECT * FROM Song ORDER BY ID desc")
     .then((data) => {
       res.status(200).json({
