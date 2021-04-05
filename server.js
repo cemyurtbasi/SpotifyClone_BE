@@ -45,6 +45,7 @@ app.post("/api/v1/refresh", async ({ body, headers }, res) => {
       expiresIn: body.expiresIn,
     });
   } catch (error) {
+    console.log(error);
     res.status(200).json({ error: error.message });
   }
 });
@@ -65,6 +66,7 @@ app.post("/api/v1/login", async ({ body, headers }, res) => {
       expiresIn: expires_in,
     });
   } catch (error) {
+    console.log(error);
     res.status(200).json({ error: error.message });
   }
 });
@@ -101,6 +103,7 @@ app.post("/api/v1/GetLyric", async ({ body }, res) => {
       status: "Success",
     });
   } catch (error) {
+    console.log(error);
     res.status(200).json({ error: error.message });
   }
 });
@@ -114,6 +117,7 @@ app.post("/api/v1/GetAllSong", async (req, res) => {
       totalCount: songs.rows.length,
     });
   } catch (error) {
+    console.log(error);
     res.status(200).json({
       lyrics: "Şarkı sözleri bulunamadı. Daha sonra tekrar deneyiniz.",
       status: "Fail - Service Error",
