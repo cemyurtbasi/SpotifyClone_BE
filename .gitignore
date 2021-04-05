@@ -23,6 +23,5 @@ yarn-debug.log*
 yarn-error.log*
 
 #db connection styles
-./db
-db/index.js
+db/*
 .env
