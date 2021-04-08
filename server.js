@@ -29,6 +29,19 @@ const spotifyDefaults = (headers) => {
     clientSecret: process.env.CLIENT_SECRET,
   };
 };
+app.post("/api/v1/DeleteSong", async ({ body, headers }, res) => {
+  const {track_uri} = body;
+  try {
+    await db.query(
+      "DELETE FROM song WHERE track_uri = $1 ",
+      [track_uri]
+    );
+    res.status(200).json({ status: "Success" });
+  } catch (error) {
+    console.log(error);
+    res.status(200).json({ error: error.message });
+  }
+})
 
 app.post("/api/v1/refresh", async ({ body, headers }, res) => {
   try {
